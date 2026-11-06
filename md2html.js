@@ -14,6 +14,10 @@ let token = void 0;
 function tokenize(md) {
     /** @type {!Array<!token>} */
     const tokens = [];
+    /* NO i++ */
+    for (let i = 0; i < md.length;) {
+        i++;
+    }
     return tokens;
 }
 
