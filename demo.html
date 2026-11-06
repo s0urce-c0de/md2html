@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MD2HTML demo</title>
+</head>
+<body>
+    <textarea name="" id="input"></textarea>
+    <pre id="output"></pre>
+    <script type="module">
+        import md2html from "./md2html.js";
+        window.md2htm = md2html;
+        document.getElementById("input").addEventListener("input", e => document.getElementById("output").textContent = (new XMLSerializer).serializeToString(md2html(e.target.value)));
+    </script>
+</body>
+</html>

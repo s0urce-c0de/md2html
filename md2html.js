@@ -18,6 +18,7 @@ function tokenize(md) {
     for (let i = 0; i < md.length;) {
         i++;
     }
+    tokens.push(md);
     return tokens;
 }
 
@@ -28,11 +29,12 @@ function tokenize(md) {
  * @returns {!DocumentFragment} The output html
  * @export
  */
-export function md2html(md) {
+export default function md2html(md) {
     /** @type {!DocumentFragment} */
     const html = document.createDocumentFragment();
     /** @type {!Array<!token>} */
     const tokens = tokenize(md);
+    html.appendChild(document.createTextNode(tokens.join("")));
     // html.push(md);
     return html;
 }
