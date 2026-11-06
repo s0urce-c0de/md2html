@@ -1,0 +1,24 @@
+{
+  "name": "md2html",
+  "version": "1.0.0",
+  "description": "A markdown to html converter",
+  "homepage": "https://github.com/s0urce-c0de/md2html#readme",
+  "bugs": {
+    "url": "https://github.com/s0urce-c0de/md2html/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/s0urce-c0de/md2html.git"
+  },
+  "license": "Apache-2.0",
+  "author": "s0urce-c0de",
+  "type": "module",
+  "main": "md2html.js",
+  "scripts": {
+    "build": "npx google-closure-compiler --flagfile=closure-flags.txt"
+  },
+  "dependencies": {
+    "google-closure-compiler": "^20261104.0.0",
+    "google-closure-library": "^20230802.0.0"
+  }
+}
