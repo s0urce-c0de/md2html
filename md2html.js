@@ -107,9 +107,8 @@ function tokenize(md) {
  * 
  * @param {string} md The markdown string to convert
  * @returns {!DocumentFragment} The output html
- * @export
  */
-export function md2html(md) {
+function md2html(md) {
     /** @const {!DocumentFragment} */
     const html = document.createDocumentFragment();
     /** @const {!Array<!token>} */
@@ -133,3 +132,7 @@ export function md2html(md) {
 
     return html;
 }
+
+window["md2html"] = md2html;
+
+export { md2html };

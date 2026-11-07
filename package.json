@@ -16,7 +16,7 @@
   "main": "md2html.js",
   "scripts": {
     "build": "google-closure-compiler --flagfile=closure-flags.txt",
-    "build-html": "sed 's/md2html\\.js/md2html\\.min\\.js/g' demo.html | html-minifier-terser --collapse-whitespace --remove-comments --minify-css true --minify-js \"{\\\"mangle\\\":false}\" > index.html"
+    "build-html": "sed 's/md2html\\.js/md2html\\.min\\.js/g' demo.html | html-minifier-terser --collapse-whitespace --remove-comments --minify-css true --minify-js \"{\\\"mangle\\\":false}\" | tee index.html"
   },
   "dependencies": {
     "google-closure-compiler": "^20261104.0.0",

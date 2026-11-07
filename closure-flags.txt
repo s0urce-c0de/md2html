@@ -1,17 +1,16 @@
---js="node_modules/google-closure-library/closure/goog/base.js"
 --js=entities.js
 --js=md2html.js
 --js_output_file=md2html.min.js
---hide_warnings_for="node_modules/google-closure-library/"
 
 --dependency_mode=PRUNE
 --entry_point=md2html.js
 --compilation_level=ADVANCED_OPTIMIZATIONS
 --warning_level=VERBOSE
+--module_resolution=NODE
 
 --env=BROWSER
 --language_in=ECMASCRIPT_NEXT
---language_out=ECMASCRIPT6
+--language_out=ES6
 
 --jscomp_error=checkTypes
 --jscomp_error=strictCheckTypes

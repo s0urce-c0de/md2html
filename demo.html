@@ -4,13 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MD2HTML demo</title>
+    <script src="./md2html.js" defer></script>
 </head>
 <body>
     <textarea name="" id="input"></textarea>
     <pre id="output"></pre>
-    <script type="module">
-        import { md2html } from "./md2html.js";
-        window.md2html = md2html;
+    <script defer>
         document.getElementById("input").addEventListener("input", e => {
             const cont = document.createElement("div");
 
