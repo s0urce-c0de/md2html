@@ -9,9 +9,15 @@
     <textarea name="" id="input"></textarea>
     <pre id="output"></pre>
     <script type="module">
-        import md2html from "./md2html.js";
-        window.md2htm = md2html;
-        document.getElementById("input").addEventListener("input", e => document.getElementById("output").textContent = (new XMLSerializer).serializeToString(md2html(e.target.value)));
+        import { md2html } from "./md2html.js";
+        window.md2html = md2html;
+        document.getElementById("input").addEventListener("input", e => {
+            const cont = document.createElement("div");
+
+            cont.appendChild(md2html(e.target.value));
+
+            document.getElementById("output").textContent = cont.innerHTML
+        });
     </script>
 </body>
 </html>
