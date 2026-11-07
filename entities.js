@@ -1,4 +1,7 @@
-/** @type {!Object<string, {codepoints: !Array<number>, characters: string}>} */
+/** @typedef {{codepoints: !Array<number>, characters: string}} entityData */
+const entityData = void 0;
+
+/** @type {!Object<string, !entityData>} */
 const entities = {
   "&AElig": { "codepoints": [198], "characters": "\u00C6" },
   "&AElig;": { "codepoints": [198], "characters": "\u00C6" },
@@ -2233,13 +2236,14 @@ const entities = {
   "&zwnj;": { "codepoints": [8204], "characters": "\u200C" }
 };
 
+/** @type {!Object<string, !entityData>} */
 const entityNamesDict = {};
 
 for (const [k, v] of Object.entries(entities)) {
   /** @type {?RegExpResult} */
   let match;
   if (match = /** @type {string} */(k).match(/^\&([a-zA-Z]+?)\;$/)) {
-    entityNamesDict[match[1]] = v;
+    entityNamesDict[match[1]] = /** @type {!entityData} */(v);
   } else {
     console.warn(`Possibly invalid { k: ${k}, v: ${v}}`);
   }

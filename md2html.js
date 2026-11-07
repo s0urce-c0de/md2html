@@ -12,7 +12,7 @@ const tokenType = {
 }; 
 
 /**
- * @typedef {{type: !tokenType, val: (string|!Array<!token>)}} token
+ * @typedef {{type: !tokenType.TEXT, val: string}} token
  */
 const token = void 0;
 
@@ -82,7 +82,7 @@ function tokenize(md) {
 
                 i += match[0].length;
                 continue;
-            } else if (match = restPastStart(/^\&\#[xX]([0-9a-fA-F]{1,6})\;/)) {
+            } else if (match = restPastStart.match(/^\&\#[xX]([0-9a-fA-F]{1,6})\;/)) {
                 tokens.push({
                     type: tokenType.TEXT,
                     val: String.fromCodePoint(parseInt(match[1], 16))
