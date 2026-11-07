@@ -8,6 +8,12 @@ import { entityNamesDict } from './entities.js';
  * @enum {number}
  */
 const tokenType = {
+    HEADER6: -6,
+    HEADER5: -5,
+    HEADER4: -4,
+    HEADER3: -3,
+    HEADER2: -2,
+    HEADER1: -1,
     TEXT: 0,
     THEMATICBREAK: 1
 }; 
@@ -52,10 +58,23 @@ function tokenize(md, opts) {
 
         if(!opts.inline) {
             if (match = restPastStart.match(/^\u0020{0,3}([\-\_\*])[\u0020\u0009]*(?:\1[\u0020\u0009]*){2,}$/)) {
+                // 4.1
                 tokens.push({
                     type: tokenType.THEMATICBREAK
                 });
                 i += match[0].length;
+                continue;
+            }
+            if (match = restPastStart.match(/^\u0020{0,3}(#{1,6})[\u0020\u0009]+(.+)[\u0020\u0009]*$/)) {
+                /** @const {?tokenType} */
+                const tokType = ([tokenType.HEADER1, tokenType.HEADER2, tokenType.HEADER3, tokenType.HEADER4, tokenType.HEADER5, tokenType.HEADER6])[match[1].length];
+                if(!tokType) { console.error("Somehow you broke the header regex!"); continue; }
+                tokens.push({
+                    type: tokType,
+                    val: tokenize(match[2], { ...opts, inline: true })
+                });
+                i += match[0].length;
+                continue;
             }
         }
         if (md[i] === "\\") {
@@ -118,30 +137,41 @@ function tokenize(md, opts) {
  * Convert markdown into HTML.
  * 
  * @param {string} md The markdown string to convert
- * @param {!Object=} tok_opts Extra token options
+ * @param {{
+ *  tokens: (!Array<!token>|undefined),
+ *  inline: (boolean|undefined)
+ * }=} opts Extra token options
  * @returns {!DocumentFragment} The output html
  */
-function md2html(md, tok_opts = {}) {
+function md2html(md, opts = {}) {
+    opts = {tokens: undefined, inline: false, ...opts};
     /** @const {!DocumentFragment} */
     const html = document.createDocumentFragment();
     /** @const {!Array<!token>} */
-    const tokens = tokenize(md, tok_opts);
+    const tokens = opts.tokens ?? tokenize(md, opts);
 
     for (let tok of tokens) {
         if (tok.type === tokenType.TEXT) {
             if(!(typeof tok.val === "string")) { console.error("Text Token was not a string!", tok); continue; }
-            if (html.lastElementChild instanceof HTMLParagraphElement) {
-                html.lastElementChild.textContent += tok.val;
+            if (html.lastChild instanceof (opts.inline ? Text : HTMLParagraphElement)) {
+                html.lastChild.textContent += tok.val;
             } else {
-                /** @type {!HTMLParagraphElement} */
-                const p = /** @type {!HTMLParagraphElement} */(document.createElement("p"));
+                const p = (opts.inline ? new Text() : document.createElement("p"));
                 // 2.3
                 p.textContent += tok.val.replaceAll('\u0000', '\uFFFD');
                 html.appendChild(p);
             }
+        } else if (opts.inline) {
+            console.error("The token does not parse in inline!", tok);
+            continue;
         } else if (tok.type === tokenType.THEMATICBREAK) {
             if (tok.val) { console.error("Thematic Break token shold not have a value!", tok); continue; }
             html.appendChild(document.createElement("hr"));
+        } else if (([tokenType.HEADER1, tokenType.HEADER2, tokenType.HEADER3, tokenType.HEADER4, tokenType.HEADER5, tokenType.HEADER6]).includes(tok.type)) {
+            if(!(tok.val instanceof Array)) { console.error("Header tokens should have subelements!"); continue; }
+            const header = document.createElement(`h${-tok.type}`);
+            header.appendChild(md2html("", {tokens: tok.val, inline: true}));
+            html.appendChild(header);
         } else {
             console.log("something went wrong! you sholdnt be able to get here");
         }
