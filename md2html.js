@@ -56,7 +56,7 @@ function tokenize(md, opts) {
         /** @const {string} */
         const restPastStart = md.slice(i).split("\n")[0];
 
-        if(!opts.inline) {
+        if(!opts.inline /* || (md[i-1] == '\n') */) {
             if (match = restPastStart.match(/^\u0020{0,3}([\-\_\*])[\u0020\u0009]*(?:\1[\u0020\u0009]*){2,}$/)) {
                 // 4.1
                 tokens.push({
@@ -65,10 +65,10 @@ function tokenize(md, opts) {
                 i += match[0].length;
                 continue;
             }
-            if (match = restPastStart.match(/^\u0020{0,3}(#{1,6})(?:[\u0020\u0009]+(.+?)(?:[\u0020\u0009]+\#+)?)?[\u0020\u0009]*)$/)) {
+            if (match = restPastStart.match(/^\u0020{0,3}(#{1,6})(?:[\u0020\u0009]+(.+?)(?:[\u0020\u0009]+\#+)?)?[\u0020\u0009]*$/)) {
                 /** @const {?tokenType} */
                 const tokType = ([tokenType.HEADER1, tokenType.HEADER2, tokenType.HEADER3, tokenType.HEADER4, tokenType.HEADER5, tokenType.HEADER6])[match[1].length];
-                if(!tokType) { console.error("Somehow you broke the header regex!"); continue; }
+                if(!tokType) { console.error("Somehow you broke the header regex!", tok); continue; }
                 tokens.push({
                     type: tokType,
                     val: tokenize(match[2], { ...opts, inline: true })
@@ -76,6 +76,7 @@ function tokenize(md, opts) {
                 i += match[0].length;
                 continue;
             }
+            // skipping 4.3 setext
         }
         if (md[i] === "\\") {
             // 2.4
