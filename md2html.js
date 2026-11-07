@@ -2,12 +2,13 @@
  * @fileoverview A markdown to HTML converter based upon https://spec.commonmark.org/0.31.2/
  */
 
+import { entityNamesDict } from './entities.js';
+
 /**
  * @enum {number}
  */
 const tokenType = {
     TEXT: 0,
-    NULL: 1
 }; 
 
 /**
@@ -31,14 +32,16 @@ function tokenize(md) {
     for (let i = 0; i < md.length;) {
         /* if (false) {
             // implement 2.2 later
-        } else */ if (md[i] === '\u0000') {
+        } else */ /* Migrated out to later if (md[i] === '\u0000') {
             // 2.3
             tokens.push({
                 type: tokenType.NULL,
                 val: md[i]
             });
             i++;
-        } else if (md[i] === "\\") {
+            continue;
+        } */ 
+        if (md[i] === "\\") {
             // 2.4
             if(md[i + 1] != void 0 && asciiPunctuationCharacter.test(md[i + 1])) {
                 tokens.push({
@@ -46,20 +49,54 @@ function tokenize(md) {
                     val: md[++i]
                 });
                 i++;
-            } else {
+                continue;
+            } /* possible implement hard breaks */ else {
                 tokens.push({
                     type: tokenType.TEXT,
                     val: md.slice(i, i + 2)
                 });
                 i += 2;
+                continue;
             }
-        } else {
-            tokens.push({
-                type: tokenType.TEXT,
-                val: md[i]
-            });
-            i++;
+        } 
+        if (md[i] === "&") {
+            // 2.5
+            /** @const {string} */
+            const restPastStart = md.slice(i).split("\n")[0];
+            /** @type {?RegExpResult} */
+            let match;
+
+            if (match = restPastStart.match(/^\&([a-zA-Z]+?)\;/)) {
+                tokens.push({
+                    type: tokenType.TEXT,
+                    val: entityNamesDict[match[1]] ? entityNamesDict[match[1]] : match[0]
+                });
+
+                i += match[0].length;
+                continue;
+            } else if (match = restPastStart.match(/^\&\#(\d{1,7})\;/)) {
+                tokens.push({
+                    type: tokenType.TEXT,
+                    val: String.fromCodePoint(parseInt(match[1], 10))
+                });
+
+                i += match[0].length;
+                continue;
+            } else if (match = restPastStart(/^\&\#[xX]([0-9a-fA-F]{1,6})\;/)) {
+                tokens.push({
+                    type: tokenType.TEXT,
+                    val: String.fromCodePoint(parseInt(match[1], 16))
+                });
+
+                i += match[0].length;
+                continue;
+            }
         }
+        tokens.push({
+            type: tokenType.TEXT,
+            val: md[i]
+        });
+        i++;
     }
 
     return tokens;
@@ -86,21 +123,12 @@ export function md2html(md) {
             } else {
                 /** @type {!HTMLParagraphElement} */
                 const p = /** @type {!HTMLParagraphElement} */(document.createElement("p"));
-                p.textContent += tok.val;
+                // 2.3
+                p.textContent += tok.val.replaceAll('\u0000', '\uFFFD');
                 html.appendChild(p);
             }
             break;
 
-        case tokenType.NULL:
-            if (html.lastElementChild instanceof HTMLParagraphElement) {
-                html.lastElementChild.textContent += '\uFFFD';
-            } else {
-                /** @type {!HTMLParagraphElement} */
-                const p = /** @type {!HTMLParagraphElement} */(document.createElement("p"));
-                p.textContent = '\uFFFD';
-                html.appendChild(p);
-            }
-            break;
         default:
             console.log("something went wrong! you sholdnt be able to get here");
             break;

@@ -1,4 +1,5 @@
 --js="node_modules/google-closure-library/closure/goog/base.js"
+--js=entities.js
 --js=md2html.js
 --js_output_file=md2html.min.js
 --hide_warnings_for="node_modules/google-closure-library/"
