@@ -2242,10 +2242,10 @@ const entityNamesDict = {};
 for (const [k, v] of Object.entries(entities)) {
   /** @type {?RegExpResult} */
   let match;
-  if (match = /** @type {string} */(k).match(/^\&([a-zA-Z]+?)\;$/)) {
+  if (match = /** @type {string} */(k).match(/^\&([a-zA-Z0-9]+?)\;$/)) {
     entityNamesDict[match[1]] = /** @type {!entityData} */(v);
   } else {
-    console.warn(`Possibly invalid { k: ${k}, v: ${v}}`);
+    if(!/\&([a-zA-Z0-9]+?)$/.test(k))console.warn(`Possibly invalid { k, v }`, k, v);
   }
 }
 

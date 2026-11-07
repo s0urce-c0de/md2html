@@ -9,10 +9,11 @@ import { entityNamesDict } from './entities.js';
  */
 const tokenType = {
     TEXT: 0,
+    THEMATICBREAK: 1
 }; 
 
 /**
- * @typedef {{type: !tokenType, val: (string|!Array<!token>)}} token
+ * @typedef {{type: !tokenType, val: (undefined|string|!Array<!token>)}} token
  */
 const token = void 0;
 
@@ -31,6 +32,8 @@ const asciiPunctuationCharacter = /[\u0021-\u002F\u003A-\u0040\u005B-\u0060\u007
 function tokenize(md, opts) {
     /** @type {!Array<!token>} */
     const tokens = [];
+    /** @type {?RegExpResult} */
+    let match;
     /* NO i++ */
     for (let i = 0; i < md.length;) {
         /* if (false) {
@@ -44,9 +47,15 @@ function tokenize(md, opts) {
             i++;
             continue;
         } */ 
-        if(!inline) {
-            if (restPastStart.match(/^\u0020{0,3}([\-\_\*])[\u0020\u0009]*(?:\1[\u0020\u0009]*){2,}$/)) {
+        /** @const {string} */
+        const restPastStart = md.slice(i).split("\n")[0];
 
+        if(!opts.inline) {
+            if (match = restPastStart.match(/^\u0020{0,3}([\-\_\*])[\u0020\u0009]*(?:\1[\u0020\u0009]*){2,}$/)) {
+                tokens.push({
+                    type: tokenType.THEMATICBREAK
+                });
+                i += match[0].length;
             }
         }
         if (md[i] === "\\") {
@@ -69,11 +78,6 @@ function tokenize(md, opts) {
         } 
         if (md[i] === "&") {
             // 2.5
-            /** @const {string} */
-            const restPastStart = md.slice(i).split("\n")[0];
-            /** @type {?RegExpResult} */
-            let match;
-
             if (match = restPastStart.match(/^\&([a-zA-Z]+?)\;/)) {
                 tokens.push({
                     type: tokenType.TEXT,
@@ -114,7 +118,7 @@ function tokenize(md, opts) {
  * Convert markdown into HTML.
  * 
  * @param {string} md The markdown string to convert
- * @param {Object=} tok_opts Extra token options
+ * @param {!Object=} tok_opts Extra token options
  * @returns {!DocumentFragment} The output html
  */
 function md2html(md, tok_opts = {}) {
@@ -124,7 +128,8 @@ function md2html(md, tok_opts = {}) {
     const tokens = tokenize(md, tok_opts);
 
     for (let tok of tokens) {
-        if (typeof tok.val === "string" && tok.type === tokenType.TEXT) {
+        if (tok.type === tokenType.TEXT) {
+            if(!(typeof tok.val === "string")) { console.error("Text Token was not a string!", tok); continue; }
             if (html.lastElementChild instanceof HTMLParagraphElement) {
                 html.lastElementChild.textContent += tok.val;
             } else {
@@ -134,6 +139,9 @@ function md2html(md, tok_opts = {}) {
                 p.textContent += tok.val.replaceAll('\u0000', '\uFFFD');
                 html.appendChild(p);
             }
+        } else if (tok.type === tokenType.THEMATICBREAK) {
+            if (tok.val) { console.error("Thematic Break token shold not have a value!", tok); continue; }
+            html.appendChild(document.createElement("hr"));
         } else {
             console.log("something went wrong! you sholdnt be able to get here");
         }
