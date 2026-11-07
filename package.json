@@ -15,10 +15,12 @@
   "type": "module",
   "main": "md2html.js",
   "scripts": {
-    "build": "npx google-closure-compiler --flagfile=closure-flags.txt"
+    "build": "google-closure-compiler --flagfile=closure-flags.txt",
+    "build-html": "sed 's/md2html\\.js/md2html\\.min\\.js/g' demo.html | npx html-minifier-terser --collapse-whitespace --remove-comments --minify-css true --minify-js \"{\\\"mangle\\\":false}\" > index.html"
   },
   "dependencies": {
     "google-closure-compiler": "^20261104.0.0",
-    "google-closure-library": "^20230802.0.0"
+    "google-closure-library": "^20230802.0.0",
+    "html-minifier-terser": "^7.2.0"
   }
 }

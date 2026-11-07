@@ -12,7 +12,7 @@ const tokenType = {
 }; 
 
 /**
- * @typedef {{type: !tokenType.TEXT, val: string}} token
+ * @typedef {{type: !tokenType, val: (string|!Array<!token>)}} token
  */
 const token = void 0;
 
@@ -69,7 +69,7 @@ function tokenize(md) {
             if (match = restPastStart.match(/^\&([a-zA-Z]+?)\;/)) {
                 tokens.push({
                     type: tokenType.TEXT,
-                    val: entityNamesDict[match[1]] ? entityNamesDict[match[1]] : match[0]
+                    val: entityNamesDict[match[1]] ? entityNamesDict[match[1]].characters : match[0]
                 });
 
                 i += match[0].length;
@@ -116,8 +116,7 @@ export function md2html(md) {
     const tokens = tokenize(md);
 
     for (let tok of tokens) {
-    switch (tok.type) {
-        case tokenType.TEXT:
+        if(typeof tok.val === "string" && tok.type === tokenType.TEXT) {
             if (html.lastElementChild instanceof HTMLParagraphElement) {
                 html.lastElementChild.textContent += tok.val;
             } else {
@@ -127,12 +126,9 @@ export function md2html(md) {
                 p.textContent += tok.val.replaceAll('\u0000', '\uFFFD');
                 html.appendChild(p);
             }
-            break;
-
-        default:
+        } else {
             console.log("something went wrong! you sholdnt be able to get here");
-            break;
-    }
+        }
     }
 
     return html;
