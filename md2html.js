@@ -23,9 +23,12 @@ const asciiPunctuationCharacter = /[\u0021-\u002F\u003A-\u0040\u005B-\u0060\u007
 
 /**
  * @param {string} md The markdown to tokenize.
+ * @param {{
+ *  inline: (boolean|undefined)
+ * }} opts The options
  * @returns {!Array<!token>}
  */
-function tokenize(md) {
+function tokenize(md, opts) {
     /** @type {!Array<!token>} */
     const tokens = [];
     /* NO i++ */
@@ -41,6 +44,11 @@ function tokenize(md) {
             i++;
             continue;
         } */ 
+        if(!inline) {
+            if (restPastStart.match(/^\u0020{0,3}([\-\_\*])[\u0020\u0009]*(?:\1[\u0020\u0009]*){2,}$/)) {
+
+            }
+        }
         if (md[i] === "\\") {
             // 2.4
             if(md[i + 1] != void 0 && asciiPunctuationCharacter.test(md[i + 1])) {
@@ -106,16 +114,17 @@ function tokenize(md) {
  * Convert markdown into HTML.
  * 
  * @param {string} md The markdown string to convert
+ * @param {Object=} tok_opts Extra token options
  * @returns {!DocumentFragment} The output html
  */
-function md2html(md) {
+function md2html(md, tok_opts = {}) {
     /** @const {!DocumentFragment} */
     const html = document.createDocumentFragment();
     /** @const {!Array<!token>} */
-    const tokens = tokenize(md);
+    const tokens = tokenize(md, tok_opts);
 
     for (let tok of tokens) {
-        if(typeof tok.val === "string" && tok.type === tokenType.TEXT) {
+        if (typeof tok.val === "string" && tok.type === tokenType.TEXT) {
             if (html.lastElementChild instanceof HTMLParagraphElement) {
                 html.lastElementChild.textContent += tok.val;
             } else {
