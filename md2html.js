@@ -20,6 +20,13 @@ const tokenType = {
 }; 
 
 /**
+ * @enum {number}
+ */
+const tokenState = {
+
+};
+
+/**
  * @typedef {{type: !tokenType, val: (undefined|string|!Array<!token>)}} token
  */
 const token = void 0;
@@ -37,6 +44,7 @@ const asciiPunctuationCharacter = /[\u0021-\u002F\u003A-\u0040\u005B-\u0060\u007
  * @returns {!Array<!token>}
  */
 function tokenize(md, opts) {
+    md = md.replace(/\r\n?/g, "\n");
     /** @type {!Array<!token>} */
     const tokens = [];
     /** @type {?RegExpResult} */
@@ -57,7 +65,7 @@ function tokenize(md, opts) {
         /** @const {string} */
         const restPastStart = md.slice(i).split("\n")[0];
 
-        notInline: if(!opts.inline || (md[i-1] === '\n')) {
+        notInline: if(!opts.inline && (md[i-1] === '\n' || i === 0)) {
             if (match = restPastStart.match(/^\u0020{0,3}([\-\_\*])[\u0020\u0009]*(?:\1[\u0020\u0009]*){2,}$/)) {
                 // 4.1
                 tokens.push({
@@ -77,13 +85,12 @@ function tokenize(md, opts) {
                 break notInline;
             }
 
-            let s;
-            if ((s = md[i]) === "\n" || (s=md.slice(i, i+2)) === '\r\n') {
+            if (md[i] === "\n") {
                 tokens.push({
                     type: tokenType.LITERALNEWLINE
                 });
 
-                i += s.length;
+                i++;
                 continue tokenBlock;
             }
             // skipping 4.3 setext
