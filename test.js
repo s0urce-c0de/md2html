@@ -26,8 +26,7 @@ describe("Commonmark Compiliance Test", () => {
             const html = td.innerHTML;
 
             // assert.strictEqual(normalizeHtml(html), normalizeHtml(tc.html))
-            console.log(tc.markdown, await minifyHTML(html), await minifyHTML(tc.html));
-            if (minifyHTML(html) !== minifyHTML(tc.html)) throw new Error("Test failed!")
+            if (await minifyHTML(html) !== await minifyHTML(tc.html)) {console.log(`Not working! { html, tc.md, tc.html }`, await minifyHTML(html), "\n", tc.markdown, "\n", await minifyHTML(tc.html)); throw new Error("Test failed!");}
         })
     });
 });
