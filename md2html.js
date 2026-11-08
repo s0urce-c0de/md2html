@@ -15,7 +15,8 @@ const tokenType = {
     HEADER2: -2,
     HEADER1: -1,
     TEXT: 0,
-    THEMATICBREAK: 1
+    THEMATICBREAK: 1,
+    LITERALNEWLINE: 2,
 }; 
 
 /**
@@ -41,7 +42,7 @@ function tokenize(md, opts) {
     /** @type {?RegExpResult} */
     let match;
     /* NO i++ */
-    for (let i = 0; i < md.length;) {
+    tokenBlock: for (let i = 0; i < md.length;) {
         /* if (false) {
             // implement 2.2 later
         } else */ /* Migrated out to later if (md[i] === '\u0000') {
@@ -56,25 +57,34 @@ function tokenize(md, opts) {
         /** @const {string} */
         const restPastStart = md.slice(i).split("\n")[0];
 
-        if(!opts.inline /* || (md[i-1] == '\n') */) {
+        notInline: if(!opts.inline || (md[i-1] === '\n')) {
             if (match = restPastStart.match(/^\u0020{0,3}([\-\_\*])[\u0020\u0009]*(?:\1[\u0020\u0009]*){2,}$/)) {
                 // 4.1
                 tokens.push({
                     type: tokenType.THEMATICBREAK
                 });
                 i += match[0].length;
-                continue;
-            }
-            if (match = restPastStart.match(/^\u0020{0,3}(#{1,6})(?:[\u0020\u0009]+(.+?)(?:[\u0020\u0009]+\#+)?)?[\u0020\u0009]*$/)) {
+            } else if (match = restPastStart.match(/^\u0020{0,3}(#{1,6})(?:[\u0020\u0009]+(.+?)(?:[\u0020\u0009]+\#+)?)?[\u0020\u0009]*$/)) {
                 /** @const {?tokenType} */
-                const tokType = ([tokenType.HEADER1, tokenType.HEADER2, tokenType.HEADER3, tokenType.HEADER4, tokenType.HEADER5, tokenType.HEADER6])[match[1].length];
+                const tokType = ([tokenType.HEADER1, tokenType.HEADER2, tokenType.HEADER3, tokenType.HEADER4, tokenType.HEADER5, tokenType.HEADER6])[match[1].length-1];
                 if(!tokType) { console.error("Somehow you broke the header regex!", tok); continue; }
                 tokens.push({
                     type: tokType,
-                    val: tokenize(match[2], { ...opts, inline: true })
+                    val: tokenize(match[2] ?? '', { ...opts, inline: true })
                 });
                 i += match[0].length;
-                continue;
+            } else {
+                break notInline;
+            }
+
+            let s;
+            if ((s = md[i]) === "\n" || (s=md.slice(i, i+2)) === '\r\n') {
+                tokens.push({
+                    type: tokenType.LITERALNEWLINE
+                });
+
+                i += s.length;
+                continue tokenBlock;
             }
             // skipping 4.3 setext
         }
@@ -83,9 +93,9 @@ function tokenize(md, opts) {
             if(md[i + 1] != void 0 && asciiPunctuationCharacter.test(md[i + 1])) {
                 tokens.push({
                     type: tokenType.TEXT,
-                    val: md[++i]
+                    val: md[i + 1]
                 });
-                i++;
+                i += 2;
                 continue;
             } /* possible implement hard breaks */ else {
                 tokens.push({
@@ -129,6 +139,7 @@ function tokenize(md, opts) {
             val: md[i]
         });
         i++;
+        continue;
     }
 
     return tokens;
@@ -165,8 +176,11 @@ function md2html(md, opts = {}) {
         } else if (opts.inline) {
             console.error("The token does not parse in inline!", tok);
             continue;
+        } else if (tok.type === tokenType.LITERALNEWLINE) {
+            if (tok.val) { console.error("Newlines should not have a value!"); continue; }
+            html.appendChild(document.createTextNode("\n"));
         } else if (tok.type === tokenType.THEMATICBREAK) {
-            if (tok.val) { console.error("Thematic Break token shold not have a value!", tok); continue; }
+            if (tok.val) { console.error("Thematic Break token should not have a value!", tok); continue; }
             html.appendChild(document.createElement("hr"));
         } else if (([tokenType.HEADER1, tokenType.HEADER2, tokenType.HEADER3, tokenType.HEADER4, tokenType.HEADER5, tokenType.HEADER6]).includes(tok.type)) {
             if(!(tok.val instanceof Array)) { console.error("Header tokens should have subelements!"); continue; }
