@@ -82,7 +82,7 @@ function tokenize(md, opts) {
 
                 // js is dumb. no \z or \Z support (by default). smh.
                 /** @type {?RegExpResult} */
-                const codeBlockValue = md.slice(i + match[0].length).match(new RegExp(`(.+?)(?:\\z|^\\u0020{0,3}${RegExp.escape(match[2])}$)`, "vm"));
+                const codeBlockValue = md.slice(i + match[0].length).match(new RegExp(`(.+?)(?:(?![\\s\\S])|^\\u0020{0,3}${RegExp.escape(match[2])}$)`, "mus"));
 
                 if(codeBlockValue) {
                     tokens.push({
@@ -90,6 +90,7 @@ function tokenize(md, opts) {
                         val: codeBlockValue[1].replace(new RegExp(`^\\u0020{0,${match[1].length}}`, "gm"), ""),
                         modifier: match[1]
                     });
+                    i += match[0].length + codeBlockValue[0].length;
                 } else break notInline;
             } else {
                 break notInline;
@@ -101,6 +102,8 @@ function tokenize(md, opts) {
                 });
 
                 i++;
+                continue tokenBlock;
+            } else if (md[i] === void 0) {
                 continue tokenBlock;
             }
             // skipping 4.3 setext
