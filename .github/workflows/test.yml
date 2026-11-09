@@ -6,6 +6,10 @@ on:
 
   workflow_dispatch:
 
+concurrency:
+  group: "test"
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
