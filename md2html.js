@@ -17,17 +17,12 @@ const tokenType = {
     TEXT: 0,
     THEMATICBREAK: 1,
     LITERALNEWLINE: 2,
+    CODEBLOCK: 3,
+    INLINECODE: 4
 }; 
 
 /**
- * @enum {number}
- */
-const tokenState = {
-
-};
-
-/**
- * @typedef {{type: !tokenType, val: (undefined|string|!Array<!token>)}} token
+ * @typedef {{type: !tokenType, val: (undefined|string|!Array<!token>), modifier: (undefined|*)}} token
  */
 const token = void 0;
 
@@ -44,7 +39,7 @@ const asciiPunctuationCharacter = /[\u0021-\u002F\u003A-\u0040\u005B-\u0060\u007
  * @returns {!Array<!token>}
  */
 function tokenize(md, opts) {
-    md = md.replace(/\r\n?/g, "\n");
+    md = md.replace(/\r\u000A?/g, "\u000A");
     /** @type {!Array<!token>} */
     const tokens = [];
     /** @type {?RegExpResult} */
@@ -63,9 +58,9 @@ function tokenize(md, opts) {
             continue;
         } */ 
         /** @const {string} */
-        const restPastStart = md.slice(i).split("\n")[0];
+        const restPastStart = md.slice(i).split("\u000A")[0];
 
-        notInline: if(!opts.inline && (md[i-1] === '\n' || i === 0)) {
+        notInline: if(!opts.inline && (md[i-1] === '\u000A' || i === 0)) {
             if (match = restPastStart.match(/^\u0020{0,3}([\-\_\*])[\u0020\u0009]*(?:\1[\u0020\u0009]*){2,}$/)) {
                 // 4.1
                 tokens.push({
@@ -75,17 +70,32 @@ function tokenize(md, opts) {
             } else if (match = restPastStart.match(/^\u0020{0,3}(#{1,6})(?:[\u0020\u0009]+(.+?)(?:[\u0020\u0009]+\#+)?)?[\u0020\u0009]*$/)) {
                 /** @const {?tokenType} */
                 const tokType = ([tokenType.HEADER1, tokenType.HEADER2, tokenType.HEADER3, tokenType.HEADER4, tokenType.HEADER5, tokenType.HEADER6])[match[1].length-1];
-                if(!tokType) { console.error("Somehow you broke the header regex!", tok); continue; }
+                if(!tokType) { console.error("Somehow you broke the header regex!", match); continue; }
                 tokens.push({
                     type: tokType,
                     val: tokenize(match[2] ?? '', { ...opts, inline: true })
                 });
                 i += match[0].length;
+            } /* insert 4.4 here */ else if (match = restPastStart.match(/^(\u0020{0,3})(\`{3,}|~{3,})(\S+)?.*$/)) {
+                // check to make sure that it isnt supposed to be inline
+                // if (match[2][0] === "`" && match[0].length > 2 * match[2].length && match[2] === match[0].slice(match[0].length - match[2].length)) break notInline;
+
+                // js is dumb. no \z or \Z support (by default). smh.
+                /** @type {?RegExpResult} */
+                const codeBlockValue = md.slice(i + match[0].length).match(new RegExp(`(.+?)(?:\\z|^\\u0020{0,3}${RegExp.escape(match[2])}$)`, "vm"));
+
+                if(codeBlockValue) {
+                    tokens.push({
+                        type: tokenType.CODEBLOCK,
+                        val: codeBlockValue[1].replace(new RegExp(`^\\u0020{0,${match[1].length}}`, "gm"), ""),
+                        modifier: match[1]
+                    });
+                } else break notInline;
             } else {
                 break notInline;
             }
 
-            if (md[i] === "\n") {
+            if (md[i] === "\u000A") {
                 tokens.push({
                     type: tokenType.LITERALNEWLINE
                 });
@@ -185,7 +195,7 @@ function md2html(md, opts = {}) {
             continue;
         } else if (tok.type === tokenType.LITERALNEWLINE) {
             if (tok.val) { console.error("Newlines should not have a value!"); continue; }
-            html.appendChild(document.createTextNode("\n"));
+            html.appendChild(document.createTextNode("\u000A"));
         } else if (tok.type === tokenType.THEMATICBREAK) {
             if (tok.val) { console.error("Thematic Break token should not have a value!", tok); continue; }
             html.appendChild(document.createElement("hr"));
@@ -194,6 +204,16 @@ function md2html(md, opts = {}) {
             const header = document.createElement(`h${-tok.type}`);
             header.appendChild(md2html("", {tokens: tok.val, inline: true}));
             html.appendChild(header);
+        } else if (tok.type === tokenType.CODEBLOCK) {
+            if (typeof tok.val !== "string") { console.error("Codeblock tokens should be a string!"); continue; }
+            const pre = document.createElement("pre");
+            const code = document.createElement("code");
+
+            code.textContent = tok.val;
+            /** add the checking other thing later */
+
+            pre.appendChild(code);
+            html.appendChild(pre);
         } else {
             console.log("something went wrong! you sholdnt be able to get here");
         }
