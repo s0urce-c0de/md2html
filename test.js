@@ -1,4 +1,3 @@
-import assert from 'node:assert/strict';
 import { test, describe } from 'node:test';
 import { tests } from 'commonmark-spec';
 import { JSDOM } from 'jsdom';
@@ -28,7 +27,7 @@ describe("Commonmark Compiliance Test", () => {
             const html = td.innerHTML;
 
             // assert.strictEqual(normalizeHtml(html), normalizeHtml(tc.html))
-            if (await minifyHTML(html) !== await minifyHTML(tc.html)) {console.log(`Not working! { html, tc.md, tc.html }`, await minifyHTML(html), "\n", tc.markdown, "\n", await minifyHTML(tc.html)); throw new Error("Test failed!");}
+            if (await minifyHTML(html) !== await minifyHTML(tc.html)) {throw new Error("Test failed!");}
         })
     });
 });

@@ -10,4 +10,4 @@ All the files are use commonmark 0.31.2 or unicode 18.0.0
 
 Want a specific unicode category? Replace `Zs` with that catgeory and run this (outputs with `|` seperator) `awk -F';' '$3 ~ /^Zs/ { printf "\\u%04s|", $1 }' UnicodeData-18.0.0.txt`.
 
-`npm test | grep -v at | grep -v ✖ | grep -v Error | cat -s`
+node -e "import { tests } from 'commonmark-spec';console.log(JSON.stringify(tests));" | jq -M . | tee tests.json
