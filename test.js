@@ -16,8 +16,10 @@ globalThis.Text = window.Text;
 // so i had to move it down here using this weird syntax
 const { md2html } = await import('./md2html.js');
 
+console.log(new Set(tests.values().map(e => e.section)));
+
 describe("Commonmark Compiliance Test", () => {
-    tests.filter(e=>(e.section==="ATX headings")).forEach(tc => {
+    tests.filter(e=>(["Thematic breaks", "ATX headings", "Fenced code blocks"]).includes(e.section)).forEach(tc => {
         test(`Test #${tc.number} - ${tc.section}`, async () => {
             const frag = md2html(tc.markdown);
 
