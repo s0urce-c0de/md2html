@@ -48,14 +48,6 @@ function tokenize(md, opts) {
     tokenBlock: for (let i = 0; i < md.length;) {
         /* if (false) {
             // implement 2.2 later
-        } else */ /* Migrated out to later if (md[i] === '\u0000') {
-            // 2.3
-            tokens.push({
-                type: tokenType.NULL,
-                val: md[i]
-            });
-            i++;
-            continue;
         } */ 
         /** @const {string} */
         const restPastStart = md.slice(i).split("\u000A")[0];
@@ -70,7 +62,7 @@ function tokenize(md, opts) {
             } else if (match = restPastStart.match(/^\u0020{0,3}(#{1,6})(?:[\u0020\u0009]+(.+?)(?:[\u0020\u0009]+\#+)?)?[\u0020\u0009]*$/)) {
                 /** @const {?tokenType} */
                 const tokType = ([tokenType.HEADER1, tokenType.HEADER2, tokenType.HEADER3, tokenType.HEADER4, tokenType.HEADER5, tokenType.HEADER6])[match[1].length-1];
-                if(!tokType) { console.error("Somehow you broke the header regex!", match); continue; }
+                if(!tokType) { console.error("Somehow you broke the header regex!", restPastStart, match); continue; }
                 tokens.push({
                     type: tokType,
                     val: tokenize(match[2] ?? '', { ...opts, inline: true })
@@ -78,9 +70,9 @@ function tokenize(md, opts) {
                 i += match[0].length;
             } /* insert 4.4 here */ else if (match = restPastStart.match(/^(\u0020{0,3})(\`{3,}|~{3,})(\S+)?.*$/)) {
                 // check to make sure that it isnt supposed to be inline
-                // if (match[2][0] === "`" && match[0].length > 2 * match[2].length && match[2] === match[0].slice(match[0].length - match[2].length)) break notInline;
+                if (match[2][0] === "`" && match[0].length > 2 * match[2].length && match[2] === match[0].slice(match[0].length - match[2].length)) break notInline;
 
-                // js is dumb. no \z or \Z support (by default). smh.
+                // js is dumb. no \z or \Z support. smh.
                 /** @type {?RegExpResult} */
                 const codeBlockValue = md.slice(i + match[0].length).match(new RegExp(`(.+?)(?:(?![\\s\\S])|^\\u0020{0,3}${RegExp.escape(match[2])}$)`, "mus"));
 
