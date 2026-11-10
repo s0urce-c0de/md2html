@@ -5,6 +5,7 @@ This is a simple tool to convert markdown to html. To compile, install dependenc
 ## THIS IS NOT EVEN CLOSE TO FULL COMMONMARK COMPATABILITY YET
 
 Try the web demo at https://s0urce-c0de.github.io/md2html/
+![Demo Image](https://terra.hackclub-assets.com/8a5c015f-1140-4dbe-851b-5413fe525269.png)
 
 # DISCLAIMER
 
